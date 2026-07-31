@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理者ポータル</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FullCalendar CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <!-- FontAwesome CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- 外部CSSの読み込み -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-100 text-slate-800 flex flex-col min-h-screen">
+
+  <!-- ヘッダー -->
+  <header class="bg-slate-900 text-white shadow-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <div class="bg-indigo-600 p-2 rounded-lg"><i class="fa-solid fa-user-shield text-xl"></i></div>
+        <div>
+          <h1 class="font-bold text-lg leading-none">管理者コントロールポータル</h1>
+          <span class="text-xs text-slate-400">Shift & Staff Management</span>
+        </div>
+      </div>
+      <div class="flex items-center space-x-3">
+        <a href="index.html" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-2 rounded-lg border border-slate-700 transition flex items-center gap-1">
+          <i class="fa-solid fa-users"></i> スタッフ画面へ
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- メインコンテンツ -->
+  <main class="max-w-7xl mx-auto px-4 py-6 flex-1 w-full grid grid-cols-1 md:grid-cols-4 gap-6">
+    <!-- サイドバー -->
+    <aside class="md:col-span-1 space-y-4">
+      <nav class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <button onclick="switchTab('calendar')" id="tab-calendar" class="tab-btn active w-full text-left px-4 py-3 text-sm font-medium border-b border-slate-100 flex items-center justify-between">
+          <span><i class="fa-solid fa-calendar-days mr-2 text-indigo-600"></i>全体シフトカレンダー</span>
+          <i class="fa-solid fa-chevron-right text-xs text-slate-400"></i>
+        </button>
+        <button onclick="switchTab('jobs')" id="tab-jobs" class="tab-btn w-full text-left px-4 py-3 text-sm font-medium border-b border-slate-100 flex items-center justify-between">
+          <span><i class="fa-solid fa-briefcase mr-2 text-indigo-600"></i>案件作成・管理</span>
+          <i class="fa-solid fa-chevron-right text-xs text-slate-400"></i>
+        </button>
+        <button onclick="switchTab('applicants')" id="tab-applicants" class="tab-btn w-full text-left px-4 py-3 text-sm font-medium border-b border-slate-100 flex items-center justify-between">
+          <span><i class="fa-solid fa-user-check mr-2 text-indigo-600"></i>応募者選考・シフト確定</span>
+          <i class="fa-solid fa-chevron-right text-xs text-slate-400"></i>
+        </button>
+        <button onclick="switchTab('staffs')" id="tab-staffs" class="tab-btn w-full text-left px-4 py-3 text-sm font-medium border-b border-slate-100 flex items-center justify-between">
+          <span><i class="fa-solid fa-address-book mr-2 text-indigo-600"></i>スタッフ名簿・口座</span>
+          <i class="fa-solid fa-chevron-right text-xs text-slate-400"></i>
+        </button>
+        <button onclick="switchTab('payroll')" id="tab-payroll" class="tab-btn w-full text-left px-4 py-3 text-sm font-medium flex items-center justify-between">
+          <span><i class="fa-solid fa-calculator mr-2 text-indigo-600"></i>給与・締日管理</span>
+          <i class="fa-solid fa-chevron-right text-xs text-slate-400"></i>
+        </button>
+      </nav>
+    </aside>
+
+    <!-- メイン表示エリア -->
+    <section class="md:col-span-3">
+      <!-- 1. 全体カレンダー -->
+      <div id="content-calendar" class="tab-content space-y-4">
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+          <h2 class="font-bold text-slate-800 mb-2">確定シフト＆希望シフトカレンダー</h2>
+          <div id="adminCalendar"></div>
+        </div>
+      </div>
+
+      <!-- 2. 案件作成・管理 -->
+      <div id="content-jobs" class="tab-content hidden space-y-4">
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+          <h2 class="font-bold text-slate-800 mb-4">新規求人案件の登録</h2>
+          <form id="jobCreateForm" onsubmit="createJob(event)" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">案件タイトル</label>
+                <input type="text" id="jobTitle" required placeholder="例: イベント運営スタッフ" class="w-full text-sm border-slate-300 rounded-lg border p-2">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">勤務地 / 場所</label>
+                <input type="text" id="jobLocation" required placeholder="例: 東京ビッグサイト" class="w-full text-sm border-slate-300 rounded-lg border p-2">
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">勤務日</label>
+                <input type="date" id="jobDate" required class="w-full text-sm border-slate-300 rounded-lg border p-2">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">時給 (円)</label>
+                <input type="number" id="jobWage" required placeholder="1200" class="w-full text-sm border-slate-300 rounded-lg border p-2">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">募集定員 (名)</label>
+                <input type="number" id="jobCapacity" required placeholder="5" class="w-full text-sm border-slate-300 rounded-lg border p-2">
+              </div>
+            </div>
+            <button type="submit" class="bg-indigo-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-indigo-700 text-sm transition">案件を発行・公開</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- 3. 応募者選考 -->
+      <div id="content-applicants" class="tab-content hidden space-y-4">
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+          <h2 class="font-bold text-slate-800 mb-2">応募・希望シフト一覧</h2>
+          <div id="applicantList" class="space-y-2">
+            <!-- JSで動的描画 -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. スタッフ名簿 -->
+      <div id="content-staffs" class="tab-content hidden space-y-4">
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+          <h2 class="font-bold text-slate-800 mb-2">登録スタッフ一覧</h2>
+          <div id="staffList" class="overflow-x-auto">
+            <!-- JSで動的描画 -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. 給与管理 -->
+      <div id="content-payroll" class="tab-content hidden space-y-4">
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+          <h2 class="font-bold text-slate-800">給与データ集計</h2>
+          <p class="text-xs text-slate-500 mt-1">確定シフトから算出された給与一覧です。</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- JSモジュールの読み込み -->
+  <script type="module" src="admin.js"></script>
+</body>
+</html>

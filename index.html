@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>スタッフマイページ</title>
+
+  <!-- Tailwind CSS (CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FullCalendar CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-family/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- 外部CSSの読み込み -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
+
+  <!-- ヘッダー -->
+  <header class="bg-indigo-900 text-white shadow-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <div class="bg-indigo-600 p-2 rounded-lg"><i class="fa-solid fa-user-gear text-xl"></i></div>
+        <div>
+          <h1 class="font-bold text-lg leading-none">スタッフマイページ</h1>
+          <span class="text-xs text-indigo-300">ワークフォース・ポータル</span>
+        </div>
+      </div>
+      <div class="flex items-center space-x-4">
+        <div class="text-right hidden sm:block">
+          <div id="staffNameDisplay" class="font-bold text-sm">ゲスト スタッフ</div>
+          <div id="staffRoleDisplay" class="text-xs text-indigo-300">未認証</div>
+        </div>
+        <button onclick="openAdminAuthModal()" class="bg-indigo-800 hover:bg-indigo-700 text-xs px-3 py-2 rounded-lg border border-indigo-600 transition flex items-center gap-1">
+          <i class="fa-solid fa-lock"></i> 管理者用
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- メインコンテンツ -->
+  <main class="max-w-7xl mx-auto px-4 py-6 flex-1 w-full grid grid-cols-1 md:grid-cols-4 gap-6">
+    <!-- サイドバー -->
+    <aside class="md:col-span-1 space-y-4">
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+        <h2 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">アカウント情報</h2>
+        <div class="space-y-3">
+          <div>
+            <label class="text-xs text-gray-500 block mb-1">氏名 (識別キー)</label>
+            <input type="text" id="staffNameInput" class="w-full text-sm font-bold border-gray-300 rounded-md shadow-sm p-2 bg-gray-50 border focus:ring-indigo-500 focus:border-indigo-500" value="山田 太郎" onchange="updateStaffName()">
+          </div>
+        </div>
+      </div>
+
+      <nav class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <button onclick="switchTab('jobs')" id="tab-jobs" class="tab-btn active w-full text-left px-4 py-3 text-sm font-medium border-b border-gray-100 flex items-center justify-between">
+          <span><i class="fa-solid fa-briefcase mr-2 text-indigo-600"></i>お仕事を探す・応募</span>
+          <i class="fa-solid fa-chevron-right text-xs text-gray-400"></i>
+        </button>
+        <button onclick="switchTab('my-shifts')" id="tab-my-shifts" class="tab-btn w-full text-left px-4 py-3 text-sm font-medium border-b border-gray-100 flex items-center justify-between">
+          <span><i class="fa-solid fa-calendar-check mr-2 text-indigo-600"></i>確定シフト・応募中</span>
+          <i class="fa-solid fa-chevron-right text-xs text-gray-400"></i>
+        </button>
+        <button onclick="switchTab('shift-submit')" id="tab-shift-submit" class="tab-btn w-full text-left px-4 py-3 text-sm font-medium border-b border-gray-100 flex items-center justify-between">
+          <span><i class="fa-solid fa-calendar-plus mr-2 text-indigo-600"></i>希望シフト提出</span>
+          <i class="fa-solid fa-chevron-right text-xs text-gray-400"></i>
+        </button>
+        <button onclick="switchTab('payroll')" id="tab-payroll" class="tab-btn w-full text-left px-4 py-3 text-sm font-medium border-b border-gray-100 flex items-center justify-between">
+          <span><i class="fa-solid fa-file-invoice-dollar mr-2 text-indigo-600"></i>給与明細・支払実績</span>
+          <i class="fa-solid fa-chevron-right text-xs text-gray-400"></i>
+        </button>
+        <button onclick="switchTab('profile')" id="tab-profile" class="tab-btn w-full text-left px-4 py-3 text-sm font-medium flex items-center justify-between">
+          <span><i class="fa-solid fa-id-card mr-2 text-indigo-600"></i>基本情報・振込口座</span>
+          <i class="fa-solid fa-chevron-right text-xs text-gray-400"></i>
+        </button>
+      </nav>
+
+      <!-- お知らせ -->
+      <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-xl">
+        <h3 class="text-xs font-bold text-indigo-900 mb-2 flex items-center"><i class="fa-solid fa-bullhorn mr-1.5"></i>管理者からのお知らせ</h3>
+        <div id="noticeContent" class="text-xs text-indigo-800 space-y-2">読み込み中...</div>
+      </div>
+    </aside>
+
+    <!-- メインコンテンツエリア -->
+    <section class="md:col-span-3">
+      <!-- 1. お仕事一覧 -->
+      <div id="content-jobs" class="tab-content space-y-4">
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex justify-between items-center">
+          <h2 class="font-bold text-gray-800">募集中の求人案件</h2>
+          <span class="text-xs text-gray-500">条件に合う案件に応募してください</span>
+        </div>
+        <div id="jobList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- JSで動的描画 -->
+        </div>
+      </div>
+
+      <!-- 2. 確定シフト・応募中 -->
+      <div id="content-my-shifts" class="tab-content hidden space-y-4">
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+          <h2 class="font-bold text-gray-800 mb-1">あなたの参加スケジュール</h2>
+          <p class="text-xs text-gray-500">採用確定済みのシフトおよび選考中の応募一覧です。</p>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+          <div id="staffCalendar"></div>
+        </div>
+      </div>
+
+      <!-- 3. 希望シフト提出 -->
+      <div id="content-shift-submit" class="tab-content hidden space-y-4">
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+          <h2 class="font-bold text-gray-800">自由希望シフトの提出</h2>
+          <p class="text-xs text-gray-500 mb-4">勤務可能な日時・時間帯を選択して提出してください。</p>
+          <form id="shiftForm" onsubmit="submitShift(event)" class="space-y-4 max-w-md">
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1">希望日</label>
+              <input type="date" id="shiftDate" required class="w-full text-sm border-gray-300 rounded-lg border p-2">
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">開始時間</label>
+                <input type="time" id="shiftStart" value="09:00" required class="w-full text-sm border-gray-300 rounded-lg border p-2">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">終了時間</label>
+                <input type="time" id="shiftEnd" value="18:00" required class="w-full text-sm border-gray-300 rounded-lg border p-2">
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1">備考・要望</label>
+              <textarea id="shiftMemo" rows="2" placeholder="例: 午後から調整可能" class="w-full text-sm border-gray-300 rounded-lg border p-2"></textarea>
+            </div>
+            <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-2 rounded-lg hover:bg-indigo-700 text-sm transition">希望シフトを送信</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- 4. 給与明細 -->
+      <div id="content-payroll" class="tab-content hidden space-y-4">
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+          <h2 class="font-bold text-gray-800">給与支給明細</h2>
+          <div class="mt-4 p-4 bg-gray-50 rounded-lg border flex justify-between items-center">
+            <div>
+              <div class="text-xs text-gray-500">当月見込給与額 (概算)</div>
+              <div class="text-2xl font-bold text-indigo-900" id="estimatedPay">￥0</div>
+            </div>
+            <button onclick="alert('Web給与明細PDFを発行します')" class="bg-white border text-xs px-3 py-2 rounded-lg font-medium shadow-sm hover:bg-gray-50">
+              <i class="fa-solid fa-file-pdf text-red-500 mr-1"></i> 明細書 (PDF)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. 基本情報・口座 -->
+      <div id="content-profile" class="tab-content hidden space-y-4">
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+          <h2 class="font-bold text-gray-800 mb-4">プロフィール＆振込口座設定</h2>
+          <form id="profileForm" onsubmit="saveProfile(event)" class="space-y-4 max-w-lg">
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1">電話番号</label>
+              <input type="tel" id="profPhone" placeholder="090-0000-0000" class="w-full text-sm border-gray-300 rounded-lg border p-2">
+            </div>
+            <div class="border-t pt-3">
+              <h3 class="text-xs font-bold text-gray-500 mb-2">給与振込口座</h3>
+              <div class="grid grid-cols-2 gap-2 mb-2">
+                <input type="text" id="bankName" placeholder="金融機関名" class="text-sm border-gray-300 rounded-lg border p-2">
+                <input type="text" id="branchName" placeholder="支店名" class="text-sm border-gray-300 rounded-lg border p-2">
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <select id="accountType" class="text-sm border-gray-300 rounded-lg border p-2">
+                  <option value="普通">普通</option>
+                  <option value="当座">当座</option>
+                </select>
+                <input type="text" id="accountNum" placeholder="口座番号" class="text-sm border-gray-300 rounded-lg border p-2">
+              </div>
+            </div>
+            <button type="submit" class="bg-indigo-600 text-white font-bold px-4 py-2 rounded-lg hover:bg-indigo-700 text-sm transition">設定を保存</button>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- モーダル: 管理者認証/お知らせ編集 -->
+  <div id="adminAuthModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4">
+      <h3 class="font-bold text-lg text-gray-900">管理者モード / お知らせ更新</h3>
+      <div>
+        <label class="text-xs text-gray-500 block mb-1">お知らせ内容の書き換え</label>
+        <textarea id="noticeInput" rows="3" class="w-full text-sm border-gray-300 rounded-lg border p-2"></textarea>
+      </div>
+      <div class="flex justify-end space-x-2">
+        <button onclick="closeAdminModal()" class="px-4 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-lg">キャンセル</button>
+        <button onclick="saveNotice()" class="px-4 py-2 text-xs font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">更新保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JSモジュールの読み込み -->
+  <script type="module" src="mypage.js"></script>
+</body>
+</html>

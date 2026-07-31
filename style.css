@@ -1,0 +1,45 @@
+@charset "UTF-8";
+
+/* タブ切り替えのスタイル */
+.tab-btn {
+  transition: all 0.2s ease-in-out;
+}
+
+.tab-btn.active {
+  background-color: #f1f5f9;
+  border-left: 4px solid #4f46e5;
+  font-weight: 700;
+  color: #4f46e5;
+}
+
+.tab-content {
+  animation: fadeIn 0.25s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* FullCalendarのカスタム調整 */
+.fc-header-toolbar {
+  font-size: 0.85rem;
+}
+
+.fc-button-primary {
+  background-color: #4f46e5 !important;
+  border-color: #4f46e5 !important;
+}
+
+.fc-event {
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  padding: 1px 3px;
+}
